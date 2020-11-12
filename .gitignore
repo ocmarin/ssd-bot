@@ -1,6 +1,7 @@
 # Login information for the bot to access the G-Spreadsheet
 token.pickle
 credentials.json
+.idea
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
