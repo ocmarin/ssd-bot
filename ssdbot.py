@@ -53,13 +53,13 @@ def main():
                         break
                     reply = f"The {ssd[0]} {ssd[1]} is a " + (f"*{ssd[10]}* " if len(
                         ssd[10]) > 0 else "") + f"**{ssd[14]}** SSD.\n\nHere is some more data from " + \
-                            f"[NewMaxx's SSD Spreadsheet](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/):\n\n" + \
-                            f"* Interface: **{ssd[2]}**\n\n* Form Factor: **{ssd[3]}**\n\n* Controller: **{ssd[5]}**\n\n* Configuration: **{ssd[6]}**\n\n" + \
-                            f"* DRAM: **{ssd[7]}**\n\n* HMB: **{ssd[8]}**\n\n* NAND Brand: **{ssd[9]}**\n\n* NAND Type: **{ssd[10]}**\n\n* 2D/3D NAND: **{ssd[11]}**\n\n" + \
-                            f"* Layers: **{ssd[12]}**\n\n* R/W: **{ssd[13]}**\n\n[Click here to view this SSD in the tier list](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0&range=A{ssd[15]}:V{ssd[15]})\n\n" + \
-                            f"[Click here to view camelcamelcamel product search page]({ssd[16]})."
+                        f"[NewMaxx's SSD Spreadsheet](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/):\n\n" + \
+                        f"* Interface: **{ssd[2]}**\n\n* Form Factor: **{ssd[3]}**\n\n* Controller: **{ssd[5]}**\n\n* Configuration: **{ssd[6]}**\n\n" + \
+                        f"* DRAM: **{ssd[7]}**\n\n* HMB: **{ssd[8]}**\n\n* NAND Brand: **{ssd[9]}**\n\n* NAND Type: **{ssd[10]}**\n\n* 2D/3D NAND: **{ssd[11]}**\n\n" + \
+                        f"* Layers: **{ssd[12]}**\n\n* R/W: **{ssd[13]}**\n\n[Click here to view this SSD in the tier list](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0&range=A{ssd[15]}:V{ssd[15]})\n\n" + \
+                        f"[Click here to view camelcamelcamel product search page]({ssd[16]})."
 
-                    reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on Github!)"
+                    reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github](https://github.com/ocmarin/ssd-bot)!)"
                     print("[COMMENT BEING SUBMITTED]\n" + reply)
                     sub.reply(reply)
                     print(f"[INFO] Posted at reddit.com{sub.permalink}")
@@ -83,7 +83,8 @@ def find_ssd(title: str, data):
             # Get one model if many are in the model cel
             # After checking if brand is in title
             # add the index and its corresponding dist to comparison
-            comparison[cur] = lev.distance(title.lower(), str(data.iloc[cur, 1]).lower())
+            comparison[cur] = lev.distance(
+                title.lower(), str(data.iloc[cur, 1]).lower())
             if str(data.iloc[cur, 1]).lower() in title.lower():
                 comparison[cur] -= (2 * len(str(data.iloc[cur, 1]).lower()))
         cur += 1
@@ -117,7 +118,8 @@ def find_ssd(title: str, data):
         match = [brand, model, interface, ffactor, capacity, controller, ssd_config, dram,
                  hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
     else:
-        camel_url = "https://camelcamelcamel.com/search?sq=" + brand.replace(" ", "") + "+" + model.replace(" ", "")
+        camel_url = "https://camelcamelcamel.com/search?sq=" + \
+            brand.replace(" ", "") + "+" + model.replace(" ", "")
         match = [brand, model, interface, ffactor, capacity, controller, ssd_config, dram,
                  hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
     print("[MATCH] Comparison Info: " + str(comparison))
