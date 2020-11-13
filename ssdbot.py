@@ -74,7 +74,6 @@ def find_ssd(title: str, data):
     comparison = {}
     # Equalizes lev distance for title length variance
     title = title[:50]
-    print(title)
     while cur < len(data):
         # If the brand is in the title
         if str(data.iloc[cur, 0]).lower() in title.lower() or (
@@ -84,7 +83,7 @@ def find_ssd(title: str, data):
             # After checking if brand is in title
             # add the index and its corresponding dist to comparison
             comparison[cur] = lev.distance(
-                title.lower(), str(data.iloc[cur, 1]).lower())
+                title.lower(), str(data.iloc[cur, 1]).lower().replace('ssd (new)', ''))
             if str(data.iloc[cur, 1]).lower() in title.lower():
                 comparison[cur] -= (2 * len(str(data.iloc[cur, 1]).lower()))
         cur += 1
