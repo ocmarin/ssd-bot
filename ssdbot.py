@@ -59,7 +59,7 @@ def main():
                         f"* Layers: **{ssd[12]}**\n\n* R/W: **{ssd[13]}**\n\n[Click here to view this SSD in the tier list](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0&range=A{ssd[15]}:V{ssd[15]})\n\n" + \
                         f"[Click here to view camelcamelcamel product search page]({ssd[16]})."
 
-                    #reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
+                    reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
                     print("[COMMENT BEING SUBMITTED]\n" + reply)
                     sub.reply(reply)
                     print(f"[INFO] Posted at reddit.com{sub.permalink}")
@@ -83,7 +83,6 @@ def find_ssd(title: str, data):
             # Get one model if many are in the model cel
             # After checking if brand is in title
             # add the index and its corresponding dist to comparison
-            print(title.lower(), str(data.iloc[cur, 1]).lower())
             comparison[cur] = lev.distance(
                 title.lower(), str(data.iloc[cur, 1]).lower().replace('ssd (new)', ''))
             if str(data.iloc[cur, 1]).lower() in title.lower():
