@@ -74,7 +74,6 @@ def find_ssd(title: str, data):
     comparison = {}
     # Equalizes lev distance for title length variance
     title = title[:50]
-    title = 'M.2 SSD[SSD] WD Black SN750 1TB SSD 3D V-NAND PCIe NVMe Gen 3 x 4 M.2 2280 Internal Solid State Drive - Micro Center (260-125=$135)'
     while cur < len(data):
         # If the brand is in the title
         if str(data.iloc[cur, 0]).lower() in title.lower() or (
