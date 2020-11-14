@@ -108,29 +108,30 @@ def find_ssd(title: str, data):
     category = data.iloc[min(comparison, key=comparison.get), 14]
     index = min(comparison, key=comparison.get) + 2
     storage_match = re.search("(\d+)TB|(\d+)GB|(\d+)tb|(\d+)gb", title)
-    clean_value_dict = {" ": "", "(": "+", ")": ""}
+    clean_value_dict = {" ": "+", "(": "+", ")": ""}
     camel_url = "https://camelcamelcamel.com/search?sq="
     if storage_match:
         storage = storage_match.group(0)
         camel_values = [brand, model, storage]
         for value in camel_values:
             for i, j in clean_value_dict.items():
-                value.replace(i, j)
-            camel_url += value
+                value = value.replace(i, j)
+            camel_url += value + "+"
+        camel_url = camel_url[:-1]
         match = [brand, model, interface, ffactor, capacity, controller, ssd_config, dram,
                  hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
     else:
         camel_values = [brand, model]
         for value in camel_values:
             for i, j in clean_value_dict.items():
-                value.replace(i, j)
-            camel_url += value
+                value = value.replace(i, j)
+            camel_url += value + "+"
+        camel_url = camel_url[:-1]
         match = [brand, model, interface, ffactor, capacity, controller, ssd_config, dram,
                  hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
     print("[MATCH] Comparison Info: " + str(comparison))
     print("[MATCH] " + str(match[0]) + " " +
           str(match[1]) + " is the best fit!")
-    print(match)
     return match
 
 
