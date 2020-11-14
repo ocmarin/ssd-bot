@@ -89,13 +89,14 @@ def find_ssd(title: str, data: {}):
 
     Args:
         title (str): The string to look for an SSD model in.
-        data (dict): A set of data in which, for the sake of this function, assumes the format is equivalent to that of the NewMaxx SSD spreadsheet.
+        data (dict): A set of data in which, for the sake of this function,
+        assumes the format is equivalent to that of the NewMaxx SSD spreadsheet.
 
     Returns:
         dict: A dictionarty containing the SSD's information. The indices of which give the same info as the aforementioned spreadsheet.
     """
     # If there is no data submitted. :(
-    if not data:
+    if data.empty:
         print("[ERROR] There was an error getting SSD information!")
 
     cur = 0
