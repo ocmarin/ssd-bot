@@ -17,10 +17,12 @@ import re
 # from googleapiclient.discovery import build
 
 def main():
+    # Credentials to logon to a Reddit account.
     client_id = os.environ["CLIENT_ID"]
     client_secret = os.environ["CLIENT_SECRET"]
     password = os.environ["SSDBOT_PASSWORD"]
 
+    # Instantiate the Reddit object w/ account. using praw.
     reddit = praw.Reddit(
         client_id=client_id,
         client_secret=client_secret,
@@ -29,45 +31,71 @@ def main():
         password=password,
     )
 
+    # Get this subreddit.
     bapcs = reddit.subreddit("BuildAPCSales")
+    # Get the data stored in a pretty dictionary.
     data = get_sheet_values(
         url="https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/export?format=csv")
+    # This loop will continue until the end of time.
     while True:
         print("[INFO] Checking recent posts...")
+        # Keep track of time to know how long to sleep.
         start_time = time.time()
-        for sub in bapcs.new(limit=20):
+        # Go through the last 10 new submissions in bapcs.
+        for sub in bapcs.new(limit=10):
+            # If the submission is not flaired as an SSD, ignore it.
             if not sub.link_flair_text:
                 continue
+            # If the submission is flaired as an SSD.
             if "SSD" in sub.link_flair_text:
                 print(f"[INFO] Found SSD Post: {sub.title}")
+                # Keep track of whether or not this bot has commented.
                 found = False
+                # Check every comment to see if this bot has commented.
                 for comment in sub.comments:
                     if comment.author and comment.author.name == "SSDBot":
                         found = True
                         print(find_ssd(sub.title, data))
                         print("[INFO] Already commented on this.")
                         break
+                # If the bot hadn't commented on this submission before.
                 if not found:
+                    # Use the func to find an SSD matching this data.
                     ssd = find_ssd(sub.title, data)
+                    # If the func returned nothing, pack it up.
                     if not ssd:
                         break
+                    # Constructing the string that will makeup the comment.
+                    # Looks messy but trust it looks fine in Reddit's markdown.
+                    # See: https://www.reddit.com/wiki/markdown
                     reply = f"The {ssd[0]} {ssd[1]} is a " + (f"*{ssd[10]}* " if len(
-                        ssd[10]) > 0 else "") + f"**{ssd[14]}** SSD.\n\nHere is some more data from " + \
-                        f"[NewMaxx's SSD Spreadsheet](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/):\n\n" + \
+                        ssd[10]) > 0 else "") + f"**{ssd[14]}** SSD.\n\n" + \
                         f"* Interface: **{ssd[2]}**\n\n* Form Factor: **{ssd[3]}**\n\n* Controller: **{ssd[5]}**\n\n* Configuration: **{ssd[6]}**\n\n" + \
                         f"* DRAM: **{ssd[7]}**\n\n* HMB: **{ssd[8]}**\n\n* NAND Brand: **{ssd[9]}**\n\n* NAND Type: **{ssd[10]}**\n\n* 2D/3D NAND: **{ssd[11]}**\n\n" + \
                         f"* Layers: **{ssd[12]}**\n\n* R/W: **{ssd[13]}**\n\n[Click here to view this SSD in the tier list](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0&range=A{ssd[15]}:V{ssd[15]})\n\n" + \
                         f"[Click here to view camelcamelcamel product search page]({ssd[16]})."
-
-                    reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [^Github!](https://github.com/ocmarin/ssd-bot))"
+                    # Continue adding more to the reply,
+                    # specifically the feedback request.
+                    reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
                     print("[COMMENT BEING SUBMITTED]\n" + reply)
+                    # Makes the bot post the comment/reply.
                     sub.reply(reply)
                     print(f"[INFO] Posted at reddit.com{sub.permalink}")
-        time.sleep(60.0 - ((time.time() - start_time) % 60))  # Sleep
+        time.sleep(60.0 - ((time.time() - start_time) % 60))  # Sleepy time
 
 
-def find_ssd(title: str, data):
-    if data.empty:
+def find_ssd(title: str, data: {}):
+    """Finds an SSD within the title string using the given data.
+
+    Args:
+        title (str): The string to look for an SSD model in.
+        data (dict): A set of data in which, for the sake of this function, assumes the format is equivalent to that of the NewMaxx SSD spreadsheet.
+
+    Returns:
+        dict: A dictionarty containing the SSD's information. The indices of which give the same info as the aforementioned spreadsheet.
+    """
+    # If there is no data submitted. :(
+    if not data:
         print("[ERROR] There was an error getting SSD information!")
 
     cur = 0
@@ -136,6 +164,14 @@ def find_ssd(title: str, data):
 
 
 def get_sheet_values(url):
+    """Simply returns the values within the spreadsheet at the URL given.
+
+    Args:
+        url (string): The url to look for the data at.
+
+    Returns:
+        dict: The information at the URL.
+    """
     r_csv = requests.get(url).content
     df = pd.read_csv(io.StringIO(r_csv.decode("utf-8")))
 
