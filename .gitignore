@@ -3,6 +3,11 @@ token.pickle
 credentials.json
 .idea
 
+# Ignore some test files
+*.log
+posts.txt
+algotest.py
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
