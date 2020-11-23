@@ -1,4 +1,3 @@
-import Levenshtein as lev
 import pandas as pd
 import praw
 import pickle
@@ -8,13 +7,6 @@ import string
 import requests
 import io
 import re
-
-
-# Used for non-public spreadsheets
-
-# from google.auth.transport.requests import Request
-# from google_auth_oauthlib.flow import InstalledAppFlow
-# from googleapiclient.discovery import build
 
 def main():
     # Credentials to logon to a Reddit account.
@@ -63,7 +55,7 @@ def main():
                             # Log to console detecting error.
                             print(f"[INFO] Negative score on comment: reddit.com{comment.permalink}")
                             # Write to log saying what the mismatch was.
-                            with open("mismatches.log", "a") as mlog:
+                            with open("mismatches.txt", "a") as mlog:
                                 mlog.write(f"{sub.title[:50]} =/= {guessed}\n")
                             # Edit the comment to prevent any further confusion.
                             edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded. " + \
@@ -236,37 +228,6 @@ def get_sheet_values(url):
     """
     r_csv = requests.get(url).content
     df = pd.read_csv(io.StringIO(r_csv.decode("utf-8")))
-
-    # # Used for non-public spreadsheets
-
-    # SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-
-    # creds = None
-    # # The file token.pickle stores the user's access and refresh tokens, and is
-    # # created automatically when the authorization flow completes for the first
-    # # time.
-    # if os.path.exists("token.pickle"):
-    #     with open("token.pickle", "rb") as token:
-    #         creds = pickle.load(token)
-    # # If there are no (valid) credentials available, let the user log in.
-    # if not creds or not creds.valid:
-    #     if creds and creds.expired and creds.refresh_token:
-    #         creds.refresh(Request())
-    #     else:
-    #         flow = InstalledAppFlow.from_client_secrets_file(
-    #             "credentials.json", SCOPES)
-    #         creds = flow.run_local_server(port=0)
-    #     # Save the credentials for the next run
-    #     with open("token.pickle", "wb") as token:
-    #         pickle.dump(creds, token)
-
-    # service = build("sheets", "v4", credentials=creds)
-
-    # info = service.spreadsheets().values().get(
-    #     spreadsheetId=sheetId, range=sheetRange).execute()
-
-    # # Info holds the cells, this will get our values
-    # return info.get("values", [])
 
     return df
 
