@@ -34,7 +34,7 @@ def main():
         # Keep track of time to know how long to sleep.
         start_time = time.time()
         # Go through the last 10 new submissions in bapcs.
-        for sub in bapcs.new(limit=10):
+        for sub in bapcs.new(limit=5):
             # If the submission is not flaired at all, ignore it.
             if not sub.link_flair_text:
                 continue
