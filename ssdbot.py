@@ -8,6 +8,7 @@ import requests
 import io
 import re
 
+
 def main():
     # Credentials to logon to a Reddit account.
     client_id = os.environ["CLIENT_ID"]
@@ -53,7 +54,8 @@ def main():
                             # If the comment with SSD info was downvoted, get the guessed SSD.
                             guessed = comment.body[4:" is"]
                             # Log to console detecting error.
-                            print(f"[INFO] Negative score on comment: reddit.com{comment.permalink}")
+                            print(
+                                f"[INFO] Negative score on comment: reddit.com{comment.permalink}")
                             # Write to log saying what the mismatch was.
                             with open("mismatches.txt", "a") as mlog:
                                 mlog.write(f"{sub.title[:50]} =/= {guessed}\n")
@@ -61,7 +63,7 @@ def main():
                             edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded. " + \
                                 "*Sorry for any confusion, humans!*"
                             comment.edit(edit)
-                            
+
                         break
                 # If the bot hadn't commented on this submission before.
                 if not found:
@@ -88,6 +90,7 @@ def main():
                     print(f"[INFO] Posted at reddit.com{sub.permalink}")
         time.sleep(60.0 - ((time.time() - start_time) % 60))  # Sleepy time
 
+
 def simplifytitle(title: str) -> str:
     """Simplifies the titles down to make easier to parse.
 
@@ -105,7 +108,8 @@ def simplifytitle(title: str) -> str:
     title = title[:40].replace("portable", "port.").replace("\n", "")
     return title
 
-def word_match(title: str, data: {}) ->{}:
+
+def word_match(title: str, data: dict) -> dict:
     """Gets the best match for the given SSD.
         This algorithm bases itself mostly on how many of the model words are in the title itself. Ex: "Samusung word 970 Evo" contains 970 and Evo, so when "970 Evo" is compared to the title, it does well unlike "860 QVO" or other models.
 
@@ -143,19 +147,22 @@ def word_match(title: str, data: {}) ->{}:
                         # print(f"Found {word} in {title}")
                         # Add this to our comparison, if already
                         # within the comparison, further subtract its value.
-                        comparison[cur] = -len(word) if cur not in comparison else comparison[cur]-len(word)
+                        comparison[cur] = - \
+                            len(word) if cur not in comparison else comparison[cur]-len(
+                                word)
                     # If a word within the model is not in the title but has had other matches.
                     elif word not in title and cur in comparison:
                         # Add more to the number, signifying
                         # that there is a larger difference.
                         comparison[cur] += len(word)
-            #print(comparison)
+            # print(comparison)
         # Since Python doesn't have traditional for loops, we make our own.
         cur += 1
     # Returns each comparison made, higher number = higher differnce.
     return comparison
 
-def best_match(comparisons: {}, getlowest: bool=True) -> {}:
+
+def best_match(comparisons: dict, getlowest: bool = True) -> dict:
     """Gets the key of the best match from the given set of comparisons.
 
     Returns:
@@ -166,9 +173,10 @@ def best_match(comparisons: {}, getlowest: bool=True) -> {}:
     if len(comparisons) == 0:
         return None
     # Otherwise, return either the highest or lowest in the comparisons; depending on what bool getlowest is.
-    return min(comparisons, key=comparisons.get) if getlowest  else max(comparisons, key=comparisons.get)
+    return min(comparisons, key=comparisons.get) if getlowest else max(comparisons, key=comparisons.get)
 
-def find_ssd(title: str, data: {}):
+
+def find_ssd(title: str, data: dict):
     """Finds an SSD within the title string using the given data.
 
     Args:
@@ -208,9 +216,9 @@ def find_ssd(title: str, data: {}):
     storage_match = re.search("(\d+)TB|(\d+)GB|(\d+)tb|(\d+)gb", title)
     clean_value_dict = {" ": "+", "(": "+", ")": ""}
     camel_url = "https://camelcamelcamel.com/search?sq="
-    
+
     match = [brand, model, interface, ffactor, capacity, controller, ssd_config, dram,
-        hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
+             hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
     # print("[MATCH] Comparison Info: " + str(comparison))
     print("[MATCH] " + str(match[0]) + " " +
           str(match[1]) + " is the best fit!")
