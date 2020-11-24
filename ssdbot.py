@@ -1,12 +1,12 @@
 import pandas as pd
 import praw
-import pickle
 import os
 import time
-import string
 import requests
 import io
 import re
+
+DEBUG = True
 
 
 def main():
@@ -62,14 +62,16 @@ def main():
                             # Edit the comment to prevent any further confusion.
                             edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded. " + \
                                 "*Sorry for any confusion, humans!*"
-                            comment.edit(edit)
+                            print(f"[EDIT] {edit}")
+                            if not DEBUG:
+                                comment.edit(edit)
 
                         break
                 # If the bot hadn't commented on this submission before.
                 if not found:
                     # Use the func to find an SSD matching this data.
                     ssd = find_ssd(sub.title, data)
-                    # If the func returned nothing, pack it up.
+                    # If the func returned None, pack it up.
                     if not ssd:
                         break
                     # Constructing the string that will makeup the comment.
@@ -84,10 +86,11 @@ def main():
                     # Continue adding more to the reply,
                     # specifically the feedback request.
                     reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
-                    print("[COMMENT BEING SUBMITTED]\n" + reply)
+                    print("[COMMENT]\n" + reply)
                     # Makes the bot post the comment/reply.
-                    sub.reply(reply)
-                    print(f"[INFO] Posted at reddit.com{sub.permalink}")
+                    if not DEBUG:
+                        sub.reply(reply)
+                        print(f"[INFO] Posted at reddit.com{sub.permalink}")
         time.sleep(60.0 - ((time.time() - start_time) % 60))  # Sleepy time
 
 
@@ -172,8 +175,12 @@ def best_match(comparisons: dict, getlowest: bool = True) -> dict:
     # If there is nothing within the given comparisons dictionary, just return None.
     if len(comparisons) == 0:
         return None
+    match = min(comparisons, key=comparisons.get) if getlowest else max(
+        comparisons, key=comparisons.get)
+    if comparisons[match] >= -1 if getlowest else comparisons[match] <= 1:
+        match = None
     # Otherwise, return either the highest or lowest in the comparisons; depending on what bool getlowest is.
-    return min(comparisons, key=comparisons.get) if getlowest else max(comparisons, key=comparisons.get)
+    return match
 
 
 def find_ssd(title: str, data: dict):
