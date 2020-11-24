@@ -52,7 +52,7 @@ def main():
                         print("[INFO] Already commented on this.")
                         if comment.score <= -3:
                             # If the comment with SSD info was downvoted, get the guessed SSD.
-                            guessed = comment.body[4:comment.index(" is")]
+                            guessed = comment.body[4:comment.body.index(" is")]
                             # Log to console detecting error.
                             print(
                                 f"[INFO] Negative score on comment: reddit.com{comment.permalink}")
