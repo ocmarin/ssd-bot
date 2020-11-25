@@ -1,20 +1,13 @@
-import Levenshtein as lev
 import pandas as pd
 import praw
-import pickle
 import os
 import time
-import string
 import requests
 import io
 import re
 
+DEBUG = False
 
-# Used for non-public spreadsheets
-
-# from google.auth.transport.requests import Request
-# from google_auth_oauthlib.flow import InstalledAppFlow
-# from googleapiclient.discovery import build
 
 def main():
     # Credentials to logon to a Reddit account.
@@ -26,7 +19,7 @@ def main():
     reddit = praw.Reddit(
         client_id=client_id,
         client_secret=client_secret,
-        user_agent="windows:in.ocielmar.ssdbot:v0.1 (by u/TheEpicPie & u/cambriancatalyst)",
+        user_agent="windows:in.ocielmar.ssdbot:v0.2 (by u/TheEpicPie & u/cambriancatalyst)",
         username="SSDBot",
         password=password,
     )
@@ -43,7 +36,7 @@ def main():
         start_time = time.time()
         # Go through the last 10 new submissions in bapcs.
         for sub in bapcs.new(limit=10):
-            # If the submission is not flaired as an SSD, ignore it.
+            # If the submission is not flaired at all, ignore it.
             if not sub.link_flair_text:
                 continue
             # If the submission is flaired as an SSD.
@@ -55,14 +48,40 @@ def main():
                 for comment in sub.comments:
                     if comment.author and comment.author.name == "SSDBot":
                         found = True
-                        print(find_ssd(sub.title, data))
+                        if DEBUG:
+                            # Only print SSD object info when debugging.
+                            print(find_ssd(sub.title, data))
                         print("[INFO] Already commented on this.")
+                        if comment.score <= -3:
+                            # If the bot receives enough downvotes, edit the comment.
+                            body = comment.body
+                            print(
+                                f"[INFO] Negative score on comment: https://reddit.com{comment.permalink}")
+                            if " is a " not in body:
+                                # If this phrase isn't in the comment, it has been edited.
+                                print("[INFO] Incorrect guess already edited.")
+                                break
+                            # If the comment with SSD info was downvoted, get the guessed SSD.
+                            guessed = body[4:body.index(" is")]
+                            # Write to log saying what the mismatch was.
+                            with open("mismatches.txt", "a") as mlog:
+                                mlog.write(
+                                    f"{simplifytitle(sub.title)} =/= {guessed}\n")
+                            # Edit the comment to prevent any further confusion.
+                            edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded. " + \
+                                "\n\n*Sorry for any confusion, humans!*" + \
+                                "\n\n---\n^(Suggestions, concerns, errors? Message us directly or " + \
+                                "submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
+                            print(f"[EDIT] {edit}")
+                            if not DEBUG:
+                                comment.edit(edit)
+
                         break
                 # If the bot hadn't commented on this submission before.
                 if not found:
                     # Use the func to find an SSD matching this data.
                     ssd = find_ssd(sub.title, data)
-                    # If the func returned nothing, pack it up.
+                    # If the func returned None, pack it up.
                     if not ssd:
                         break
                     # Constructing the string that will makeup the comment.
@@ -77,14 +96,105 @@ def main():
                     # Continue adding more to the reply,
                     # specifically the feedback request.
                     reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
-                    print("[COMMENT BEING SUBMITTED]\n" + reply)
+                    print("[COMMENT]\n" + reply)
                     # Makes the bot post the comment/reply.
-                    sub.reply(reply)
-                    print(f"[INFO] Posted at reddit.com{sub.permalink}")
-        time.sleep(60.0 - ((time.time() - start_time) % 60))  # Sleepy time
+                    if not DEBUG:
+                        sub.reply(reply)
+                        print(
+                            f"[INFO] Posted at https://reddit.com{sub.permalink}")
+        time.sleep(60.0 - ((time.time() - start_time) % 90))  # Sleepy time
 
 
-def find_ssd(title: str, data: {}):
+def simplifytitle(title: str) -> str:
+    """Simplifies the titles down to make easier to parse.
+
+    Specifically, makes the titles lowercase and removes anything within square brackets([]).
+
+    Args:
+        title (str): The title to dumb down for easier navigation through.
+
+    Returns:
+        str: The given title in lowercase with unneccessary data removed.
+    """
+    title = title.lower()
+    # Deletes anything in [] (inclusive)
+    title = re.sub("\[(.*?)\] ", "", title)
+    title = title[:40].replace("portable", "port.").replace("\n", "")
+    return title
+
+
+def word_match(title: str, data: dict) -> dict:
+    """Gets the best match for the given SSD.
+        This algorithm bases itself mostly on how many of the model words are in the title itself. Ex: "Samusung word 970 Evo" contains 970 and Evo, so when "970 Evo" is compared to the title, it does well unlike "860 QVO" or other models.
+
+        The title is the text to try to find an appropriate match for. The data is a dictionary of SSDs in which the 0th and 1st index of each entry are the brand and model, respectively.
+
+    Returns:
+        dict: A dictionary of all the comparisons made. The key
+        signifies the row that the SSD was found in within the
+        provided data.
+    """
+    # Keeps track of which SSD is being parsed through.
+    cur = 0
+    # Keeps track of all comparisons being made.
+    # The key being the SSD number,
+    # and the value is how similar to the model the title is.
+    comparison = {}
+    # Simplify the title to make easier to parse.
+    title = simplifytitle(title)
+    # Continue to loop through until we are out of data.
+    while cur < len(data):
+        # Get the brand and model from the data.
+        brand = str(data.iloc[cur, 0]).lower()
+        model = str(data.iloc[cur, 1]).lower()
+        # If the brand is in the title
+        if brand in title or (
+                "adata" == brand and "xpg" in title) or (
+                "wd" == brand and "western digital" in title):
+            # For the occassional SSDs that have a slash
+            for words in model.split("/"):
+                # For every word (whitespace in between) within each split.
+                for word in words.split():
+                    # If the data didn't return "nan"
+                    # and a word within the model is in the title.
+                    if word != "nan" and word in title:
+                        # print(f"Found {word} in {title}")
+                        # Add this to our comparison, if already
+                        # within the comparison, further subtract its value.
+                        comparison[cur] = - \
+                            len(word) if cur not in comparison else comparison[cur]-len(
+                                word)
+                    # If a word within the model is not in the title but has had other matches.
+                    elif word not in title and cur in comparison:
+                        # Add more to the number, signifying
+                        # that there is a larger difference.
+                        comparison[cur] += len(word)
+            # print(comparison)
+        # Since Python doesn't have traditional for loops, we make our own.
+        cur += 1
+    # Returns each comparison made, higher number = higher differnce.
+    return comparison
+
+
+def best_match(comparisons: dict, getlowest: bool = True) -> dict:
+    """Gets the key of the best match from the given set of comparisons.
+
+    Returns:
+        dict: A dictionary containing the information that best matches.
+        None: When there is no good match, such as comparisons containg no info.
+    """
+    # If there is nothing within the given comparisons dictionary, just return None.
+    if len(comparisons) == 0:
+        return None
+    match = min(comparisons, key=comparisons.get) if getlowest else max(
+        comparisons, key=comparisons.get)
+    if comparisons[match] >= -1 if getlowest else comparisons[match] <= 1:
+        match = None
+    # Otherwise, return either the highest or lowest in the comparisons; depending on what bool getlowest is.
+    return match
+
+
+def find_ssd(title: str, data: dict):
     """Finds an SSD within the title string using the given data.
 
     Args:
@@ -97,68 +207,37 @@ def find_ssd(title: str, data: {}):
     """
     # If there is no data submitted. :(
     if data.empty:
-        print("[ERROR] There was an error getting SSD information!")
+        print("[ERROR] Couldn't retrieve SSD information!")
 
-    cur = 0
-    comparison = {}
-    # Equalizes lev distance for title length variance
-    title = title[:50]
-    while cur < len(data):
-        # If the brand is in the title
-        if str(data.iloc[cur, 0]).lower() in title.lower() or (
-                "adata" == str(data.iloc[cur, 0]).lower() and "xpg" in title.lower()) or (
-                "wd" == str(data.iloc[cur, 0]).lower() and "western digital" in title.lower()):
-            # Get one model if many are in the model cel
-            # After checking if brand is in title
-            # add the index and its corresponding dist to comparison
-            comparison[cur] = lev.distance(
-                title.lower(), str(data.iloc[cur, 1]).lower().replace('ssd (new)', ''))
-            if str(data.iloc[cur, 1]).lower() in title.lower():
-                comparison[cur] -= (2 * len(str(data.iloc[cur, 1]).lower()))
-        cur += 1
-    if len(comparison) <= 0:
-        print("[ERROR] SSD could not be found.")
+    ind = best_match(word_match(title, data))
+
+    if not ind:
         return None
+
     # The match is the best SSD with the least lev distance from the title
-    brand = data.iloc[min(comparison, key=comparison.get), 0]
-    model = data.iloc[min(comparison, key=comparison.get), 1]
-    interface = data.iloc[min(comparison, key=comparison.get), 2]
-    ffactor = data.iloc[min(comparison, key=comparison.get), 3]
-    capacity = data.iloc[min(comparison, key=comparison.get), 4]
-    controller = data.iloc[min(comparison, key=comparison.get), 5]
-    ssd_config = data.iloc[min(comparison, key=comparison.get), 6]
-    dram = data.iloc[min(comparison, key=comparison.get), 7]
-    hmb = data.iloc[min(comparison, key=comparison.get), 8]
-    nand_brand = data.iloc[min(comparison, key=comparison.get), 9]
-    nand_type = data.iloc[min(comparison, key=comparison.get), 10]
-    nand_2d_3d = data.iloc[min(comparison, key=comparison.get), 11]
-    layers = data.iloc[min(comparison, key=comparison.get), 12]
-    r_w = data.iloc[min(comparison, key=comparison.get), 13]
-    category = data.iloc[min(comparison, key=comparison.get), 14]
-    index = min(comparison, key=comparison.get) + 2
+    brand = data.iloc[ind, 0]
+    model = data.iloc[ind, 1]
+    interface = data.iloc[ind, 2]
+    ffactor = data.iloc[ind, 3]
+    capacity = data.iloc[ind, 4]
+    controller = data.iloc[ind, 5]
+    ssd_config = data.iloc[ind, 6]
+    dram = data.iloc[ind, 7]
+    hmb = data.iloc[ind, 8]
+    nand_brand = data.iloc[ind, 9]
+    nand_type = data.iloc[ind, 10]
+    nand_2d_3d = data.iloc[ind, 11]
+    layers = data.iloc[ind, 12]
+    r_w = data.iloc[ind, 13]
+    category = data.iloc[ind, 14]
+    index = ind + 2
     storage_match = re.search("(\d+)TB|(\d+)GB|(\d+)tb|(\d+)gb", title)
     clean_value_dict = {" ": "+", "(": "+", ")": ""}
     camel_url = "https://camelcamelcamel.com/search?sq="
-    if storage_match:
-        storage = storage_match.group(0)
-        camel_values = [brand, model, storage]
-        for value in camel_values:
-            for i, j in clean_value_dict.items():
-                value = value.replace(i, j)
-            camel_url += value + "+"
-        camel_url = camel_url[:-1]
-        match = [brand, model, interface, ffactor, capacity, controller, ssd_config, dram,
-                 hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
-    else:
-        camel_values = [brand, model]
-        for value in camel_values:
-            for i, j in clean_value_dict.items():
-                value = value.replace(i, j)
-            camel_url += value + "+"
-        camel_url = camel_url[:-1]
-        match = [brand, model, interface, ffactor, capacity, controller, ssd_config, dram,
-                 hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
-    print("[MATCH] Comparison Info: " + str(comparison))
+
+    match = [brand, model, interface, ffactor, capacity, controller, ssd_config, dram,
+             hmb, nand_brand, nand_type, nand_2d_3d, layers, r_w, category, index, camel_url]
+    # print("[MATCH] Comparison Info: " + str(comparison))
     print("[MATCH] " + str(match[0]) + " " +
           str(match[1]) + " is the best fit!")
     return match
@@ -175,37 +254,6 @@ def get_sheet_values(url):
     """
     r_csv = requests.get(url).content
     df = pd.read_csv(io.StringIO(r_csv.decode("utf-8")))
-
-    # # Used for non-public spreadsheets
-
-    # SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
-
-    # creds = None
-    # # The file token.pickle stores the user's access and refresh tokens, and is
-    # # created automatically when the authorization flow completes for the first
-    # # time.
-    # if os.path.exists("token.pickle"):
-    #     with open("token.pickle", "rb") as token:
-    #         creds = pickle.load(token)
-    # # If there are no (valid) credentials available, let the user log in.
-    # if not creds or not creds.valid:
-    #     if creds and creds.expired and creds.refresh_token:
-    #         creds.refresh(Request())
-    #     else:
-    #         flow = InstalledAppFlow.from_client_secrets_file(
-    #             "credentials.json", SCOPES)
-    #         creds = flow.run_local_server(port=0)
-    #     # Save the credentials for the next run
-    #     with open("token.pickle", "wb") as token:
-    #         pickle.dump(creds, token)
-
-    # service = build("sheets", "v4", credentials=creds)
-
-    # info = service.spreadsheets().values().get(
-    #     spreadsheetId=sheetId, range=sheetRange).execute()
-
-    # # Info holds the cells, this will get our values
-    # return info.get("values", [])
 
     return df
 
