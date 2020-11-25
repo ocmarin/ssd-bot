@@ -35,7 +35,7 @@ def main():
         # Keep track of time to know how long to sleep.
         start_time = time.time()
         # Go through the last 10 new submissions in bapcs.
-        for sub in bapcs.new(limit=5):
+        for sub in bapcs.new(limit=10):
             # If the submission is not flaired at all, ignore it.
             if not sub.link_flair_text:
                 continue
@@ -99,7 +99,7 @@ def main():
                     if not DEBUG:
                         sub.reply(reply)
                         print(f"[INFO] Posted at reddit.com{sub.permalink}")
-        time.sleep(60.0 - ((time.time() - start_time) % 60))  # Sleepy time
+        time.sleep(60.0 - ((time.time() - start_time) % 90))  # Sleepy time
 
 
 def simplifytitle(title: str) -> str:
