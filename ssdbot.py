@@ -6,7 +6,7 @@ import requests
 import io
 import re
 
-DEBUG = True
+DEBUG = False
 
 
 def main():
@@ -19,7 +19,7 @@ def main():
     reddit = praw.Reddit(
         client_id=client_id,
         client_secret=client_secret,
-        user_agent="windows:in.ocielmar.ssdbot:v0.1 (by u/TheEpicPie & u/cambriancatalyst)",
+        user_agent="windows:in.ocielmar.ssdbot:v0.2 (by u/TheEpicPie & u/cambriancatalyst)",
         username="SSDBot",
         password=password,
     )
@@ -56,7 +56,7 @@ def main():
                             # If the bot receives enough downvotes, edit the comment.
                             body = comment.body
                             print(
-                                f"[INFO] Negative score on comment: reddit.com{comment.permalink}")
+                                f"[INFO] Negative score on comment: https://reddit.com{comment.permalink}")
                             if " is a " not in body:
                                 # If this phrase isn't in the comment, it has been edited.
                                 print("[INFO] Incorrect guess already edited.")
@@ -69,7 +69,9 @@ def main():
                                     f"{simplifytitle(sub.title)} =/= {guessed}\n")
                             # Edit the comment to prevent any further confusion.
                             edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded. " + \
-                                "*Sorry for any confusion, humans!*"
+                                "\n\n*Sorry for any confusion, humans!*" + \
+                                "\n\n---\n^(Suggestions, concerns, errors? Message us directly or " + \
+                                "submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
                             print(f"[EDIT] {edit}")
                             if not DEBUG:
                                 comment.edit(edit)
@@ -98,7 +100,8 @@ def main():
                     # Makes the bot post the comment/reply.
                     if not DEBUG:
                         sub.reply(reply)
-                        print(f"[INFO] Posted at reddit.com{sub.permalink}")
+                        print(
+                            f"[INFO] Posted at https://reddit.com{sub.permalink}")
         time.sleep(60.0 - ((time.time() - start_time) % 90))  # Sleepy time
 
 
