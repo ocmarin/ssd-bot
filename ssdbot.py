@@ -48,17 +48,25 @@ def main():
                 for comment in sub.comments:
                     if comment.author and comment.author.name == "SSDBot":
                         found = True
-                        print(find_ssd(sub.title, data))
+                        if DEBUG:
+                            # Only print SSD object info when debugging.
+                            print(find_ssd(sub.title, data))
                         print("[INFO] Already commented on this.")
                         if comment.score <= -3:
-                            # If the comment with SSD info was downvoted, get the guessed SSD.
-                            guessed = comment.body[4:comment.body.index(" is")]
-                            # Log to console detecting error.
+                            # If the bot receives enough downvotes, edit the comment.
+                            body = comment.body
                             print(
                                 f"[INFO] Negative score on comment: reddit.com{comment.permalink}")
+                            if " is a " not in body:
+                                # If this phrase isn't in the comment, it has been edited.
+                                print("[INFO] Incorrect guess already edited.")
+                                break
+                            # If the comment with SSD info was downvoted, get the guessed SSD.
+                            guessed = body[4:body.index(" is")]
                             # Write to log saying what the mismatch was.
                             with open("mismatches.txt", "a") as mlog:
-                                mlog.write(f"{sub.title[:50]} =/= {guessed}\n")
+                                mlog.write(
+                                    f"{simplifytitle(sub.title)} =/= {guessed}\n")
                             # Edit the comment to prevent any further confusion.
                             edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded. " + \
                                 "*Sorry for any confusion, humans!*"

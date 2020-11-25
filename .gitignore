@@ -8,6 +8,9 @@ credentials.json
 posts.txt
 algotest.py
 
+# Ignore a running log of mismatches.
+mismatches.txt
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
