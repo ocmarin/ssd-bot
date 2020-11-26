@@ -2,6 +2,7 @@ import pandas as pd
 import praw
 import os
 import time
+from praw.reddit import Reddit
 import requests
 import io
 import re
@@ -52,30 +53,6 @@ def main():
                             # Only print SSD object info when debugging.
                             print(find_ssd(sub.title, data))
                         print("[INFO] Already commented on this.")
-                        if comment.score <= -3:
-                            # If the bot receives enough downvotes, edit the comment.
-                            body = comment.body
-                            print(
-                                f"[INFO] Negative score on comment: https://reddit.com{comment.permalink}")
-                            if " is a " not in body:
-                                # If this phrase isn't in the comment, it has been edited.
-                                print("[INFO] Incorrect guess already edited.")
-                                break
-                            # If the comment with SSD info was downvoted, get the guessed SSD.
-                            guessed = body[4:body.index(" is")]
-                            # Write to log saying what the mismatch was.
-                            with open("mismatches.txt", "a") as mlog:
-                                mlog.write(
-                                    f"{simplifytitle(sub.title)} =/= {guessed}\n")
-                            # Edit the comment to prevent any further confusion.
-                            edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded. " + \
-                                "\n\n*Sorry for any confusion, humans!*" + \
-                                "\n\n---\n^(Suggestions, concerns, errors? Message us directly or " + \
-                                "submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
-                            print(f"[EDIT] {edit}")
-                            if not DEBUG:
-                                comment.edit(edit)
-
                         break
                 # If the bot hadn't commented on this submission before.
                 if not found:
@@ -102,7 +79,38 @@ def main():
                         sub.reply(reply)
                         print(
                             f"[INFO] Posted at https://reddit.com{sub.permalink}")
+
+        check_mismatches(reddit, "SSDBot", 10)
         time.sleep(60.0 - ((time.time() - start_time) % 90))  # Sleepy time
+
+
+def check_mismatches(reddit: Reddit, user: str, posts: int):
+    for comment in reddit.redditor(user).comments.new(limit=posts):
+        # Cycle through all the last x comments for the given redditor.
+        if comment.score <= -3:
+            # If the bot receives enough downvotes, edit the comment.
+            body = comment.body
+            sub = comment.submission
+            print(
+                f"[INFO] Negative score on comment: https://reddit.com{comment.permalink}")
+            if " is a " not in body:
+                # If this phrase isn't in the comment, it has been edited.
+                print("[INFO] Incorrect guess already edited.")
+                break
+            # If the comment with SSD info was downvoted, get the guessed SSD.
+            guessed = body[4:body.index(" is")]
+            # Write to log saying what the mismatch was.
+            with open("mismatches.txt", "a") as mlog:
+                mlog.write(
+                    f"{simplifytitle(sub.title)} =/= {guessed}\n")
+            # Edit the comment to prevent any further confusion.
+            edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded." + \
+                "\n\n*Sorry for any confusion, humans!*" + \
+                "\n\n---\n^(Suggestions, concerns, errors? Message us directly or " + \
+                "submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
+            print(f"[EDIT] {edit}")
+            if not DEBUG:
+                comment.edit(edit)
 
 
 def simplifytitle(title: str) -> str:
