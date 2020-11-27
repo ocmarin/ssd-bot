@@ -15,7 +15,7 @@ The bot will automatically attempt to find an SSD mentioned in a submission. In 
 Comments made by the bot will describe what *category of SSD* the given model falls under. This is explicitly written in the **first line of the comment.** This is a generalization about the usage the SSD; what it would perform best for and what type of customer the product is targetting.
 
 ### Category Types
-[u/NewMaxx](https://www.reddit.com/user/NewMaxx/) (the creater of the [SSDs spreadsheet](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0) this bot utilizes) describes the details of [what the categories mean in this post.](https://www.reddit.com/r/NewMaxx/comments/dhvrdm/ssd_guides_resources/) The following descriptions are *paraphrasings of those guides.*
+[u/NewMaxx](https://www.reddit.com/user/NewMaxx/) (the creator of the [SSDs spreadsheet](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0) this bot utilizes) describes the details of [what the categories mean in this post.](https://www.reddit.com/r/NewMaxx/comments/dhvrdm/ssd_guides_resources/) The following descriptions are *paraphrasings of those guides.*
 
 #### Sata
 * **Storage SATA**: Suitable for general data/games. Larger capacity, not the primary drive.
