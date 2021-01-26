@@ -72,7 +72,7 @@ def main():
                         f"[Click here to view camelcamelcamel product search page]({ssd[16]})."
                     # Continue adding more to the reply,
                     # specifically the feedback request.
-                    reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
+                    reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on) [^(Github!)](https://github.com/ocmarin/ssd-bot)"
                     print("[COMMENT]\n" + reply)
                     # Makes the bot post the comment/reply.
                     if not DEBUG:
@@ -107,7 +107,7 @@ def check_mismatches(reddit: Reddit, user: str, posts: int):
             edit = f"My guess ({guessed}) was **incorrect**. This incident has been recorded." + \
                 "\n\n*Sorry for any confusion, humans!*" + \
                 "\n\n---\n^(Suggestions, concerns, errors? Message us directly or " + \
-                "submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
+                "submit an issue on) [^(Github!)](https://github.com/ocmarin/ssd-bot)"
             print(f"[EDIT] {edit}")
             if not DEBUG:
                 comment.edit(edit)
