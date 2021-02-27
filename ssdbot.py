@@ -2,6 +2,7 @@ import pandas as pd
 import praw
 import os
 import time
+from praw.models.reddit.subreddit import ContributorRelationship
 from praw.reddit import Reddit
 import requests
 import io
@@ -50,7 +51,7 @@ def main():
                     if comment.author and comment.author.name == "SSDBot":
                         found = True
                         if DEBUG:
-                            # Only print SSD object info when debugging.
+                            # Print SSD object info when debugging.
                             print(find_ssd(sub.title, data))
                         print("[INFO] Already commented on this.")
                         break
@@ -64,8 +65,9 @@ def main():
                     # Constructing the string that will makeup the comment.
                     # Looks messy but trust it looks fine in Reddit's markdown.
                     # See: https://www.reddit.com/wiki/markdown
-                    reply = f"The {ssd[0]} {ssd[1]} is a " + (f"*{ssd[10]}* " if len(
-                        ssd[10]) > 0 else "") + f"**{ssd[14]}** SSD.\n\n" + \
+                    print(ssd[10])
+                    reply = f"The {ssd[0]} {ssd[1]} is a " + (f"*{ssd[10]}* " if
+                                                              type(ssd[10]) is not float else "") + f"**{ssd[14]}** SSD.\n\n" + \
                         f"* Interface: **{ssd[2]}**\n\n* Form Factor: **{ssd[3]}**\n\n* Controller: **{ssd[5]}**\n\n* Configuration: **{ssd[6]}**\n\n" + \
                         f"* DRAM: **{ssd[7]}**\n\n* HMB: **{ssd[8]}**\n\n* NAND Brand: **{ssd[9]}**\n\n* NAND Type: **{ssd[10]}**\n\n* 2D/3D NAND: **{ssd[11]}**\n\n" + \
                         f"* Layers: **{ssd[12]}**\n\n* R/W: **{ssd[13]}**\n\n[Click here to view this SSD in the tier list](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0&range=A{ssd[15]}:V{ssd[15]})\n\n" + \
@@ -75,13 +77,98 @@ def main():
                     reply += f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
                     print("[COMMENT]\n" + reply)
                     # Makes the bot post the comment/reply.
-                    if not DEBUG:
+                    if not DEBUG:  # Only submit a comment when not debugging.
                         sub.reply(reply)
                         print(
                             f"[INFO] Posted at https://reddit.com{sub.permalink}")
 
         check_mismatches(reddit, "SSDBot", 10)
+        check_for_comparisons(reddit, 20, data)
         time.sleep(60.0 - ((time.time() - start_time) % 90))  # Sleepy time
+
+
+def chart_ssd(*args) -> str:
+    """Formats the given SSD into a nice chart.
+
+    Args:
+        ssd (str): Data containing the SSD's information. Should be in the following order:
+        Model, Brand, Interface, Form Factor, NONE, Controller, Configuration, DRAM, HMB,
+        NAND Brand, Nand Type, 2/3D NAND, Layers, R/W Speed, NONE, tier-index, Camel Search Page
+
+    Returns:
+        str: The nicely formatted string that is human friendly when combined into a chart.
+    """
+    print("IN PAIN")
+
+    # This method is not efficient at all.
+    pain = f"|SSD"
+    for ssd in args:
+        pain = pain + f"|{ssd[0]} {ssd[1]}"
+    pain = pain+f"|\n|:-:"
+    for ssd in args:
+        pain = pain + "|:-:"
+    pain = pain+"|\n|Tier"
+    for ssd in args:
+        pain = pain+f"|{ssd[10]}"
+    pain = pain+"|\n|Interface"
+    for ssd in args:
+        pain = pain + f"|{ssd[2]}"
+    pain = pain + "|\n|Form Factor"
+    for ssd in args:
+        pain = pain+f"|{ssd[3]}"
+    pain = pain+"|\n|Controller"
+    for ssd in args:
+        pain = pain+f"|{ssd[5]}"
+    pain = pain+"|\n|Configuration"
+    for ssd in args:
+        pain = pain+f"|{ssd[6]}"
+    pain = pain+"|\n|DRAM"
+    for ssd in args:
+        pain = pain+f"|{ssd[7]}"
+    pain = pain+"|\n|HMB"
+    for ssd in args:
+        pain = pain+f"|{ssd[8]}"
+    pain = pain+"|\n|NAND Brand"
+    for ssd in args:
+        pain = pain+f"|{ssd[9]}"
+    pain = pain+"|\n|NAND Type"
+    for ssd in args:
+        pain = pain+f"|{ssd[10]}"
+    pain = pain+"|\n|2D/3D NAND"
+    for ssd in args:
+        pain = pain+f"|{ssd[11]}"
+    pain = pain+"|\n|Layers"
+    for ssd in args:
+        pain = pain+f"|{ssd[12]}"
+    pain = pain+"|\n|R/W"
+    for ssd in args:
+        pain = pain+f"|{ssd[13]}"
+    pain = pain+"|\n|Tier Link"
+    for ssd in args:
+        pain = pain + \
+            f"|[Link](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0&range=A{ssd[15]}:V{ssd[15]})"
+    pain = pain+"|"
+    return pain
+
+
+def check_for_comparisons(reddit: Reddit, posts: int, data: dict):
+    for comment in reddit.redditor("SSDBot").comments.new(limit=posts):
+        # Cycle through all the last x comments by the bot.
+        for reply in comment.replies:
+            if "vs" in str.lower(reply.body):
+                first = comment[comment.body.index(
+                    " "+1):comment.body.index("is")-1]
+                second = reply.body[reply.body.index("vs") + 3:]
+                print(
+                    f"[INFO] Found an attempted comparison on {first} against {second}!")
+                contender = find_ssd(first, data)
+                challenger = find_ssd(second, data)
+                comp = chart_ssd(contender, challenger) + \
+                    f"\n\n---\n^(Suggestions, concerns, errors? Message us directly or submit an issue on [Github!](https://github.com/ocmarin/ssd-bot))"
+                if not DEBUG:
+                    reply.reply(comp)
+                    print(
+                        f"[COMPARISON] Made a comparison post at: https://reddit.com{reply.permalink}")
 
 
 def check_mismatches(reddit: Reddit, user: str, posts: int):

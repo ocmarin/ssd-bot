@@ -7,6 +7,9 @@ credentials.json
 *.log
 posts.txt
 algotest.py
+test.py
+out.txt
+.DS_Store
 
 # Ignore a running log of mismatches.
 mismatches.txt
