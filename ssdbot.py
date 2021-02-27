@@ -83,7 +83,8 @@ def main():
                             f"[INFO] Posted at https://reddit.com{sub.permalink}")
 
         check_mismatches(reddit, "SSDBot", 10)
-        check_for_comparisons(reddit, 20, data)
+        # Comparisons function to be implemented.
+        # check_for_comparisons(reddit, 20, data)
         time.sleep(60.0 - ((time.time() - start_time) % 90))  # Sleepy time
 
 
@@ -152,6 +153,9 @@ def chart_ssd(*args) -> str:
 
 
 def check_for_comparisons(reddit: Reddit, posts: int, data: dict):
+    # TODO: Not familar with what data types these return.
+    # I just wanted to cycle through the comments of recent comments from the bot.
+
     for comment in reddit.redditor("SSDBot").comments.new(limit=posts):
         # Cycle through all the last x comments by the bot.
         for reply in comment.replies:
