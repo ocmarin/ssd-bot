@@ -70,7 +70,7 @@ def main():
                                                               type(ssd[10]) is not float else "") + f"**{ssd[13]}** SSD.\n\n" + \
                         f"* Interface: **{ssd[2]}**\n\n* Form Factor: **{ssd[3]}**\n\n* Controller: **{ssd[5]}**\n\n* Configuration: **{ssd[6]}**\n\n" + \
                         f"* DRAM: **{ssd[7]}**\n\n* HMB: **{ssd[8]}**\n\n* NAND Brand: **{ssd[9]}**\n\n* NAND Type: **{ssd[10]}**\n\n" + \
-                        f"* Layers: **{ssd[11]}**\n\n* R/W: **{ssd[12]}**\n\n[Click here to view this SSD in the tier list](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0&range=A{ssd[15]}:V{ssd[15]})\n\n" + \
+                        f"* Layers: **{ssd[11]}**\n\n* R/W: **{ssd[12]}**\n\n[Click here to view this SSD in the list](https://docs.google.com/spreadsheets/d/1B27_j9NDPU3cNlj2HKcrfpJKHkOf-Oi1DbuuQva2gT4/edit#gid=0&range=A{ssd[15]}:V{ssd[15]})\n\n" + \
                         f"[Click here to view camelcamelcamel product search page]({ssd[16]})."
                     # Continue adding more to the reply,
                     # specifically the feedback request.
